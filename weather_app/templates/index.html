@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Weather</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"/>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <h1>&#9729; Weather</h1>
+    </header>
+
+    <form method="POST" class="search-form">
+      <input
+        type="text"
+        name="city"
+        placeholder="Enter a city..."
+        value="{{ city }}"
+        autofocus
+        autocomplete="off"
+      />
+      <button type="submit">Search</button>
+    </form>
+
+    {% if error %}
+      <div class="error">{{ error }}</div>
+    {% endif %}
+
+    {% if weather %}
+    <!-- Current conditions card -->
+    <div class="card">
+      <div class="card-top">
+        <div class="location">
+          <span class="city">{{ weather.city }}</span>
+          <span class="country">{{ weather.country }}</span>
+        </div>
+        <img
+          class="icon"
+          src="https://openweathermap.org/img/wn/{{ weather.icon }}@2x.png"
+          alt="{{ weather.description }}"
+        />
+      </div>
+
+      <div class="temp-row">
+        <span class="temp" id="temp-display">{{ weather.temp_c }}°C</span>
+        <div class="toggle-wrap">
+          <button class="toggle-btn active" id="btn-c" onclick="setUnit('C')">°C</button>
+          <button class="toggle-btn"        id="btn-f" onclick="setUnit('F')">°F</button>
+        </div>
+      </div>
+
+      <p class="description">{{ weather.description }}</p>
+
+      <div class="details">
+        <div class="detail">
+          <span class="label">Feels like</span>
+          <span id="feels-display">{{ weather.feels_c }}°C</span>
+        </div>
+        <div class="detail">
+          <span class="label">Humidity</span>
+          <span>{{ weather.humidity }}%</span>
+        </div>
+        <div class="detail">
+          <span class="label">Wind</span>
+          <span id="wind-display">{{ weather.wind_kph }} km/h</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    {% if hourly or daily %}
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('hourly', this)">Today (Hourly)</button>
+      <button class="tab"        onclick="showTab('daily',  this)">5-Day Forecast</button>
+    </div>
+
+    <!-- Hourly -->
+    {% if hourly %}
+    <div class="forecast-panel" id="panel-hourly">
+      <div class="forecast-scroll">
+        {% for h in hourly %}
+        <div class="forecast-item">
+          <span class="f-label">{{ h.time }}</span>
+          <img src="https://openweathermap.org/img/wn/{{ h.icon }}.png" alt="{{ h.desc }}" class="f-icon" onerror="this.style.visibility='hidden'"/>
+          <span class="f-temp"
+                data-c="{{ h.temp_c }}°C"
+                data-f="{{ h.temp_f }}°F">{{ h.temp_c }}°C</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- 5-day -->
+    {% if daily %}
+    <div class="forecast-panel hidden" id="panel-daily">
+      {% for d in daily %}
+      <div class="daily-row">
+        <div class="daily-day">
+          <span class="f-label">{{ d.day }}</span>
+          <span class="f-date">{{ d.date }}</span>
+        </div>
+        <img src="https://openweathermap.org/img/wn/{{ d.icon }}.png" alt="{{ d.desc }}" class="f-icon" onerror="this.style.visibility='hidden'"/>
+        <span class="daily-desc">{{ d.desc }}</span>
+        <div class="daily-temps">
+          <span class="high"
+                data-c="{{ d.high_c }}°"
+                data-f="{{ d.high_f }}°">{{ d.high_c }}°</span>
+          <span class="low"
+                data-c="{{ d.low_c }}°"
+                data-f="{{ d.low_f }}°">{{ d.low_c }}°</span>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% endif %}
+
+    <script>
+      const current = {
+        tempC: "{{ weather.temp_c }}°C", tempF: "{{ weather.temp_f }}°F",
+        feelsC: "{{ weather.feels_c }}°C", feelsF: "{{ weather.feels_f }}°F",
+        windKph: "{{ weather.wind_kph }} km/h", windMph: "{{ weather.wind_mph }} mph"
+      };
+
+      let unit = 'C';
+
+      function setUnit(u) {
+        unit = u;
+        // current card
+        document.getElementById('temp-display').textContent  = u === 'C' ? current.tempC  : current.tempF;
+        document.getElementById('feels-display').textContent = u === 'C' ? current.feelsC : current.feelsF;
+        document.getElementById('wind-display').textContent  = u === 'C' ? current.windKph : current.windMph;
+        document.getElementById('btn-c').classList.toggle('active', u === 'C');
+        document.getElementById('btn-f').classList.toggle('active', u === 'F');
+        // forecast temps
+        document.querySelectorAll('[data-c]').forEach(el => {
+          el.textContent = u === 'C' ? el.dataset.c : el.dataset.f;
+        });
+      }
+
+      function showTab(name, btn) {
+        document.querySelectorAll('.forecast-panel').forEach(p => p.classList.add('hidden'));
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.getElementById('panel-' + name).classList.remove('hidden');
+        btn.classList.add('active');
+      }
+    </script>
+    {% endif %}
+  </div>
+</body>
+</html>

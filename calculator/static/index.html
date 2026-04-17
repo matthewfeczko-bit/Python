@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>X-Men Calculator</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@400;600&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: #0a0a0a;
+      font-family: 'Oswald', sans-serif;
+      background-image:
+        repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(255,205,0,0.03) 40px, rgba(255,205,0,0.03) 41px),
+        repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(255,205,0,0.03) 40px, rgba(255,205,0,0.03) 41px);
+    }
+
+    .calc {
+      background: #111;
+      border: 2px solid #f5c300;
+      border-radius: 4px;
+      padding: 0;
+      width: 340px;
+      box-shadow:
+        0 0 0 1px #000,
+        0 0 30px rgba(245,195,0,0.25),
+        0 30px 80px rgba(0,0,0,0.8);
+      overflow: hidden;
+    }
+
+    /* Header */
+    .header {
+      background: #f5c300;
+      padding: 12px 20px 10px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: relative;
+    }
+    .x-logo {
+      width: 36px;
+      height: 36px;
+      flex-shrink: 0;
+    }
+    .header-text {
+      display: flex;
+      flex-direction: column;
+    }
+    .header-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px;
+      color: #111;
+      letter-spacing: 2px;
+      line-height: 1;
+    }
+    .header-sub {
+      font-size: 9px;
+      color: #333;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+    }
+    .header-stripe {
+      position: absolute;
+      right: 0; top: 0; bottom: 0;
+      width: 8px;
+      background: #111;
+    }
+
+    /* Display */
+    #display {
+      background: #0c0c0c;
+      border-bottom: 2px solid #f5c300;
+      padding: 14px 18px 12px;
+      text-align: right;
+      position: relative;
+    }
+    #display::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 4px;
+      background: #f5c300;
+    }
+    #expression {
+      color: #888;
+      font-size: 13px;
+      min-height: 18px;
+      word-break: break-all;
+      letter-spacing: 1px;
+    }
+    #result {
+      color: #f5c300;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 42px;
+      letter-spacing: 2px;
+      min-height: 48px;
+      word-break: break-all;
+      text-shadow: 0 0 12px rgba(245,195,0,0.4);
+    }
+    #error {
+      color: #e63946;
+      font-size: 12px;
+      min-height: 16px;
+      letter-spacing: 1px;
+    }
+
+    /* Button grid */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      background: #f5c300;
+      border-top: none;
+    }
+
+    button {
+      border: none;
+      font-family: 'Oswald', sans-serif;
+      font-size: 17px;
+      font-weight: 600;
+      height: 66px;
+      cursor: pointer;
+      letter-spacing: 1px;
+      transition: filter 0.08s, transform 0.06s;
+      position: relative;
+      overflow: hidden;
+    }
+    button::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(255,255,255,0);
+      transition: background 0.1s;
+    }
+    button:hover::after  { background: rgba(255,255,255,0.06); }
+    button:active::after { background: rgba(255,255,255,0.15); }
+    button:active { transform: scale(0.96); }
+
+    .btn-num {
+      background: #1a1a1a;
+      color: #e0e0e0;
+    }
+    .btn-op {
+      background: #222;
+      color: #f5c300;
+      font-size: 20px;
+    }
+    .btn-fn {
+      background: #161616;
+      color: #aaa;
+      font-size: 14px;
+    }
+    .btn-eq {
+      background: #f5c300;
+      color: #111;
+      grid-column: span 2;
+      font-size: 22px;
+      letter-spacing: 2px;
+    }
+    .btn-eq:hover::after { background: rgba(0,0,0,0.1); }
+    .btn-clr {
+      background: #e63946;
+      color: #fff;
+    }
+    .btn-zero { grid-column: span 2; }
+  </style>
+</head>
+<body>
+<div class="calc">
+  <div class="header">
+    <!-- X logo SVG -->
+    <svg class="x-logo" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="18" cy="18" rx="17" ry="17" fill="#111" stroke="#111" stroke-width="1"/>
+      <text x="18" y="26" text-anchor="middle" font-family="'Bebas Neue', sans-serif" font-size="28" fill="#f5c300" letter-spacing="-1">X</text>
+    </svg>
+    <div class="header-text">
+      <div class="header-title">X-Men Calculator</div>
+      <div class="header-sub">Xavier's Institute · Cerebro v4.0</div>
+    </div>
+    <div class="header-stripe"></div>
+  </div>
+
+  <div id="display">
+    <div id="expression"></div>
+    <div id="result">0</div>
+    <div id="error"></div>
+  </div>
+
+  <div class="grid">
+    <button class="btn-clr"               onclick="clear_all()">AC</button>
+    <button class="btn-fn"                onclick="append('(')">(</button>
+    <button class="btn-fn"                onclick="append(')')">)</button>
+    <button class="btn-op"                onclick="append('%')">%</button>
+
+    <button class="btn-fn"                onclick="append('sqrt(')">√</button>
+    <button class="btn-fn"                onclick="append('**2')">x²</button>
+    <button class="btn-fn"                onclick="append('**')">xʸ</button>
+    <button class="btn-op"                onclick="append('/')">÷</button>
+
+    <button class="btn-num"               onclick="append('7')">7</button>
+    <button class="btn-num"               onclick="append('8')">8</button>
+    <button class="btn-num"               onclick="append('9')">9</button>
+    <button class="btn-op"                onclick="append('*')">×</button>
+
+    <button class="btn-num"               onclick="append('4')">4</button>
+    <button class="btn-num"               onclick="append('5')">5</button>
+    <button class="btn-num"               onclick="append('6')">6</button>
+    <button class="btn-op"                onclick="append('-')">−</button>
+
+    <button class="btn-num"               onclick="append('1')">1</button>
+    <button class="btn-num"               onclick="append('2')">2</button>
+    <button class="btn-num"               onclick="append('3')">3</button>
+    <button class="btn-op"                onclick="append('+')">+</button>
+
+    <button class="btn-num btn-zero"      onclick="append('0')">0</button>
+    <button class="btn-num"               onclick="append('.')">.</button>
+    <button class="btn-eq"                onclick="calculate()">=</button>
+  </div>
+</div>
+
+<script>
+  let expr = '';
+
+  function append(val) {
+    expr += val;
+    document.getElementById('expression').textContent = expr;
+    document.getElementById('error').textContent = '';
+  }
+
+  function clear_all() {
+    expr = '';
+    document.getElementById('expression').textContent = '';
+    document.getElementById('result').textContent = '0';
+    document.getElementById('error').textContent = '';
+  }
+
+  async function calculate() {
+    if (!expr) return;
+    try {
+      const res = await fetch('/api/calc', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ expression: expr })
+      });
+      const data = await res.json();
+      if (data.error) {
+        document.getElementById('error').textContent = data.error;
+        document.getElementById('result').textContent = '';
+      } else {
+        document.getElementById('result').textContent = data.result;
+        document.getElementById('error').textContent = '';
+        expr = String(data.result);
+      }
+    } catch {
+      document.getElementById('error').textContent = 'Network error';
+    }
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter') calculate();
+    else if (e.key === 'Backspace') { expr = expr.slice(0, -1); document.getElementById('expression').textContent = expr; }
+    else if (e.key === 'Escape') clear_all();
+    else if ('0123456789+-*/.()%'.includes(e.key)) append(e.key);
+  });
+</script>
+</body>
+</html>
