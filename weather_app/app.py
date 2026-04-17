@@ -16,6 +16,34 @@ def c_to_f(c):
     return round(c * 9 / 5 + 32)
 
 
+def get_alerts(w):
+    alerts = []
+    cid = w["condition_id"]
+    if cid == 781:
+        alerts.append({"level": "danger", "text": "Tornado warning active"})
+    elif cid == 771:
+        alerts.append({"level": "danger", "text": "Squalls warning active"})
+    elif 200 <= cid < 300:
+        alerts.append({"level": "warning", "text": "Thunderstorm in the area"})
+    elif cid in (502, 503, 504):
+        alerts.append({"level": "warning", "text": "Heavy rain warning"})
+    elif cid in (602, 622):
+        alerts.append({"level": "warning", "text": "Heavy snow warning"})
+    if w["temp_c"] >= 38:
+        alerts.append({"level": "danger", "text": f"Extreme heat: {w['temp_c']}°C / {w['temp_f']}°F"})
+    elif w["temp_c"] >= 32:
+        alerts.append({"level": "warning", "text": f"Heat advisory: {w['temp_c']}°C / {w['temp_f']}°F"})
+    if w["temp_c"] <= -20:
+        alerts.append({"level": "danger", "text": f"Extreme cold: {w['temp_c']}°C / {w['temp_f']}°F"})
+    elif w["temp_c"] <= -10:
+        alerts.append({"level": "warning", "text": f"Cold advisory: {w['temp_c']}°C / {w['temp_f']}°F"})
+    if w["wind_kph"] >= 90:
+        alerts.append({"level": "danger", "text": f"Dangerous winds: {w['wind_kph']} km/h"})
+    elif w["wind_kph"] >= 60:
+        alerts.append({"level": "warning", "text": f"High wind advisory: {w['wind_kph']} km/h"})
+    return alerts
+
+
 def get_weather(city):
     params = {"q": city, "appid": API_KEY, "units": "metric"}
     resp = requests.get(BASE_URL, params=params, timeout=5)
@@ -26,19 +54,22 @@ def get_weather(city):
     if not resp.ok:
         return None, "Weather service unavailable."
     d = resp.json()
-    return {
-        "city":        d["name"],
-        "country":     d["sys"]["country"],
-        "temp_c":      round(d["main"]["temp"]),
-        "temp_f":      c_to_f(d["main"]["temp"]),
-        "feels_c":     round(d["main"]["feels_like"]),
-        "feels_f":     c_to_f(d["main"]["feels_like"]),
-        "description": d["weather"][0]["description"].title(),
-        "icon":        d["weather"][0]["icon"],
-        "humidity":    d["main"]["humidity"],
-        "wind_kph":    round(d["wind"]["speed"] * 3.6),
-        "wind_mph":    round(d["wind"]["speed"] * 2.237),
-    }, None
+    w = {
+        "city":         d["name"],
+        "country":      d["sys"]["country"],
+        "temp_c":       round(d["main"]["temp"]),
+        "temp_f":       c_to_f(d["main"]["temp"]),
+        "feels_c":      round(d["main"]["feels_like"]),
+        "feels_f":      c_to_f(d["main"]["feels_like"]),
+        "description":  d["weather"][0]["description"].title(),
+        "icon":         d["weather"][0]["icon"],
+        "humidity":     d["main"]["humidity"],
+        "wind_kph":     round(d["wind"]["speed"] * 3.6),
+        "wind_mph":     round(d["wind"]["speed"] * 2.237),
+        "condition_id": d["weather"][0]["id"],
+    }
+    w["alerts"] = get_alerts(w)
+    return w, None
 
 
 def get_forecast(city):

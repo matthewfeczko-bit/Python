@@ -12,20 +12,37 @@
       <h1>&#9729; Weather</h1>
     </header>
 
-    <form method="POST" class="search-form">
+    <form method="POST" class="search-form" id="searchForm">
       <input
         type="text"
         name="city"
+        id="cityInput"
         placeholder="Enter a city..."
         value="{{ city }}"
         autofocus
         autocomplete="off"
       />
       <button type="submit">Search</button>
+      {% if city %}
+      <button type="button" class="fav-btn" id="favToggle" onclick="toggleFavorite('{{ city }}')">☆</button>
+      {% endif %}
     </form>
+
+    <div class="favorites-bar" id="favBar"></div>
 
     {% if error %}
       <div class="error">{{ error }}</div>
+    {% endif %}
+
+    {% if weather and weather.alerts %}
+    <div class="alerts">
+      {% for alert in weather.alerts %}
+      <div class="alert alert-{{ alert.level }}">
+        {% if alert.level == 'danger' %}⚠️{% else %}⚠️{% endif %}
+        {{ alert.text }}
+      </div>
+      {% endfor %}
+    </div>
     {% endif %}
 
     {% if weather %}
@@ -150,5 +167,44 @@
     </script>
     {% endif %}
   </div>
+
+  <script>
+    const FAV_KEY = 'weatherFavorites';
+    function getFavs() { return JSON.parse(localStorage.getItem(FAV_KEY) || '[]'); }
+    function saveFavs(f) { localStorage.setItem(FAV_KEY, JSON.stringify(f)); }
+
+    function toggleFavorite(city) {
+      const favs = getFavs();
+      const idx = favs.findIndex(c => c.toLowerCase() === city.toLowerCase());
+      if (idx >= 0) favs.splice(idx, 1);
+      else favs.unshift(city);
+      saveFavs(favs);
+      renderFavBar();
+    }
+
+    function renderFavBar() {
+      const bar = document.getElementById('favBar');
+      if (!bar) return;
+      const favs = getFavs();
+      bar.innerHTML = '';
+      favs.forEach(city => {
+        const chip = document.createElement('button');
+        chip.className = 'fav-chip';
+        chip.textContent = city;
+        chip.onclick = () => {
+          document.getElementById('cityInput').value = city;
+          document.getElementById('searchForm').submit();
+        };
+        bar.appendChild(chip);
+      });
+      {% if city %}
+      const saved = favs.some(c => c.toLowerCase() === '{{ city }}'.toLowerCase());
+      const btn = document.getElementById('favToggle');
+      if (btn) btn.textContent = saved ? '★' : '☆';
+      {% endif %}
+    }
+
+    renderFavBar();
+  </script>
 </body>
 </html>
